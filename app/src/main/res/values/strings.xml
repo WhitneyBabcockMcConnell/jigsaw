@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">jigsaw</string>
+    <string name="generate_edges">Generate Edges</string>
 </resources>
