@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.graphics.ColorUtils;
 import android.widget.TextView;
 
@@ -79,7 +80,17 @@ public class EdgeDetector
         return a;
     }
 
+    public static Bitmap sobel(BitmapDrawable bitmapDrawable, final TextView progressView, Activity activity)
+    {
+        return sobel(bitmapDrawable.getBitmap(), progressView, activity);
+    }
+
     public static Bitmap sobel(Resources resources, int imageResId, final TextView progressView, Activity activity)
+    {
+        return sobel(BitmapFactory.decodeResource(resources, imageResId), progressView, activity);
+    }
+
+    public static Bitmap sobel(Bitmap inputBitmap, final TextView progressView, Activity activity)
     {
         int[][] filter1 = {
                 {-1, 0, 1},
@@ -93,15 +104,12 @@ public class EdgeDetector
                 {-1, -2, -1}
         };
 
-        Bitmap inputBitmap = BitmapFactory.decodeResource(resources, imageResId);
         int width = inputBitmap.getWidth();
         int height = inputBitmap.getHeight();
         Bitmap outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
         int[][] luminanceMatrix = buildLuminanceMatrix(inputBitmap);
 
-//        double luminance;
-//        int gray;
         int gray1;
         int gray2;
         int magnitude;
@@ -113,17 +121,11 @@ public class EdgeDetector
             {
                 gray1 = 0;
                 gray2 = 0;
-                // get 3-by-3 array of colors in neighborhood
+
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
-//                        luminance = ColorUtils.calculateLuminance(inputBitmap.getPixel(x - 1 + i, y - 1 + j));
-//                        gray = (int) (255 * luminance);
-//
-//                        // apply filter
-//                        gray1 += gray * filter1[i][j];
-//                        gray2 += gray * filter2[i][j];
                         gray1 += luminanceMatrix[x - 1 + i][y - 1 + j] * filter1[i][j];
                         gray2 += luminanceMatrix[x - 1 + i][y - 1 + j] * filter2[i][j];
                     }
