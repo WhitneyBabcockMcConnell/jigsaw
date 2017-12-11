@@ -93,42 +93,47 @@ public class EdgeDetector
                 {-1, -2, -1}
         };
 
-        Bitmap picture0 = BitmapFactory.decodeResource(resources, imageResId);
-        int width = picture0.getWidth();
-        int height = picture0.getHeight();
-        Bitmap picture1 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Bitmap inputBitmap = BitmapFactory.decodeResource(resources, imageResId);
+        int width = inputBitmap.getWidth();
+        int height = inputBitmap.getHeight();
+        Bitmap outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 
+        int[][] luminanceMatrix = buildLuminanceMatrix(inputBitmap);
+
+//        double luminance;
+//        int gray;
+        int gray1;
+        int gray2;
+        int magnitude;
+        int grayscale;
+        int x;
         for (int y = 1; y < height - 1; y++)
         {
-            for (int x = 1; x < width - 1; x++)
+            for (x = 1; x < width - 1; x++)
             {
+                gray1 = 0;
+                gray2 = 0;
                 // get 3-by-3 array of colors in neighborhood
-                int[][] gray = new int[3][3];
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
-//                        gray[i][j] = (int) Luminance.intensity(picture0.get(x - 1 + i, y - 1 + j));
-                        gray[i][j] = (int) ColorUtils.calculateLuminance(picture0.getPixel(x - 1 + i, y - 1 + j));
+//                        luminance = ColorUtils.calculateLuminance(inputBitmap.getPixel(x - 1 + i, y - 1 + j));
+//                        gray = (int) (255 * luminance);
+//
+//                        // apply filter
+//                        gray1 += gray * filter1[i][j];
+//                        gray2 += gray * filter2[i][j];
+                        gray1 += luminanceMatrix[x - 1 + i][y - 1 + j] * filter1[i][j];
+                        gray2 += luminanceMatrix[x - 1 + i][y - 1 + j] * filter2[i][j];
                     }
                 }
 
-                // apply filter
-                int gray1 = 0, gray2 = 0;
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        gray1 += gray[i][j] * filter1[i][j];
-                        gray2 += gray[i][j] * filter2[i][j];
-                    }
-                }
-                // int magnitude = 255 - truncate(Math.abs(gray1) + Math.abs(gray2));
-                int magnitude = 255 - truncate((int) Math.sqrt(gray1 * gray1 + gray2 * gray2));
-                int grayscale = Color.argb(255, magnitude, magnitude, magnitude);
-                picture1.setPixel(x, y, grayscale);
+                magnitude = 255 - truncate((int) Math.sqrt(gray1 * gray1 + gray2 * gray2));
+                grayscale = Color.argb(255, magnitude, magnitude, magnitude);
+                outputBitmap.setPixel(x, y, grayscale);
 
-
+                // Update progress
                 final float percent = 100.0f * (float) ((y * width) + x) / (float) (height * width);
                 activity.runOnUiThread(new Runnable()
                 {
@@ -143,6 +148,29 @@ public class EdgeDetector
 
         progressView.setText("Done");
 
-        return picture1;
+        return outputBitmap;
+    }
+
+    private static int[][] buildLuminanceMatrix(Bitmap source)
+    {
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int[] pixels = new int[width * height];
+
+        source.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        int[][] result = new int[width][height];
+        double luminance;
+        int x;
+        for (int y = 0; y < height; y++)
+        {
+            for (x = 0; x < width; x++)
+            {
+                luminance = ColorUtils.calculateLuminance(pixels[y * width + x]);
+                result[x][y] = (int) (255 * luminance);
+            }
+        }
+
+        return result;
     }
 }
